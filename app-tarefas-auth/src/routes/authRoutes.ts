@@ -1,42 +1,74 @@
-// ============================================================
-// 🎯 TODO 5: Rotas de autenticação
-// ============================================================
 import { Router, Request, Response } from "express";
-// 🎯 TODO: import * as UserModel from "../models/userModel";
+import * as UserModel from "../models/userModel";
 
 export const authRoutes = Router();
 
-// 🎯 TODO 6: GET /login — renderizar "login" com flash
+// GET /login
 authRoutes.get("/login", (req: Request, res: Response) => {
-  res.render("login", { flash: null });
+  const flash = req.session.flash || null;
+
+  req.session.flash = null;
+
+  res.render("login", { flash });
 });
 
-// 🎯 TODO 7: GET /registro — renderizar "registro" com flash
+// GET /registro
 authRoutes.get("/registro", (req: Request, res: Response) => {
-  res.render("registro", { flash: null });
+  const flash = req.session.flash || null;
+
+  req.session.flash = null;
+
+  res.render("registro", { flash });
 });
 
-// 🎯 TODO 8: POST /registro
-// Validar nome/email/senha (min 6 chars)
-// UserModel.registrar(nome, email, senha)
-// Se erro (email duplicado): flash + redirect /registro
-// Se ok: flash "Conta criada!" + redirect /login
+// POST /registro
 authRoutes.post("/registro", async (req: Request, res: Response) => {
-  // TODO: implementar registro
-  res.redirect("/registro");
+  try {
+    const { nome, email, senha } = req.body;
+
+    if (!nome || !email || !senha) {
+      req.session.flash = "Preencha todos os campos";
+      return res.redirect("/registro");
+    }
+
+    if (senha.length < 6) {
+      req.session.flash = "Senha deve ter no mínimo 6 caracteres";
+      return res.redirect("/registro");
+    }
+
+    await UserModel.registrar(nome, email, senha);
+
+    req.session.flash = "Conta criada com sucesso!";
+
+    res.redirect("/login");
+  } catch (error) {
+    req.session.flash = "Email já cadastrado";
+
+    res.redirect("/registro");
+  }
 });
 
-// 🎯 TODO 9: POST /login
-// UserModel.login(email, senha)
-// Se null: flash "Email ou senha incorretos" + redirect /login
-// Se ok: session.userId, session.userName, redirect /tarefas
+// POST /login
 authRoutes.post("/login", async (req: Request, res: Response) => {
-  // TODO: implementar login
-  res.redirect("/login");
+  const { email, senha } = req.body;
+
+  const user = await UserModel.login(email, senha);
+
+  if (!user) {
+    req.session.flash = "Email ou senha incorretos";
+
+    return res.redirect("/login");
+  }
+
+  req.session.userId = user.id;
+  req.session.userName = user.nome;
+
+  res.redirect("/tarefas");
 });
 
-// 🎯 TODO 10: GET /logout — req.session.destroy
+// GET /logout
 authRoutes.get("/logout", (req: Request, res: Response) => {
-  // TODO: destruir session
-  res.redirect("/login");
+  req.session.destroy(() => {
+    res.redirect("/login");
+  });
 });
