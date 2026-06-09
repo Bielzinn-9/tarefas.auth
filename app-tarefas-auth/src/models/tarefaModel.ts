@@ -26,8 +26,10 @@ export async function listarPorUsuario(userId: number): Promise<Tarefa[]> {
 export async function adicionar(userId: number, texto: string): Promise<Tarefa> {
   const todas = await carregar();
   const nova: Tarefa = {
-    id: (todas.at(-1)?.id ?? 0) + 1,
-    userId, texto: texto.trim(), concluida: false,
+    id: (todas[todas.length - 1]?.id ?? 0) + 1,
+    userId,
+    texto: texto.trim(),
+    concluida: false,
     criadaEm: new Date().toLocaleDateString("pt-BR"),
   };
   todas.push(nova);
