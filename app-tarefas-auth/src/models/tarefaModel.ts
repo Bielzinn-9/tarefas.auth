@@ -1,4 +1,3 @@
-// ✅ PRONTO — Model de Tarefas (não precisa alterar)
 import { readFile, writeFile } from "fs/promises";
 
 export interface Tarefa {
@@ -12,45 +11,75 @@ export interface Tarefa {
 const ARQUIVO = "dados/tarefas.json";
 
 async function carregar(): Promise<Tarefa[]> {
-  try { return JSON.parse(await readFile(ARQUIVO, "utf-8")); }
-  catch { await writeFile(ARQUIVO, "[]"); return []; }
-}
-async function salvar(t: Tarefa[]): Promise<void> {
-  await writeFile(ARQUIVO, JSON.stringify(t, null, 2));
+  try {
+    const dados = await readFile(ARQUIVO, "utf-8");
+
+    return JSON.parse(dados);
+  } catch {
+    return [];
+  }
 }
 
-export async function listarPorUsuario(userId: number): Promise<Tarefa[]> {
-  return (await carregar()).filter(t => t.userId === userId);
+async function salvar(tarefas: Tarefa[]): Promise<void> {
+  await writeFile(
+    ARQUIVO,
+    JSON.stringify(tarefas, null, 2)
+  );
 }
 
-export async function adicionar(userId: number, texto: string): Promise<Tarefa> {
-  const todas = await carregar();
+export async function listarPorUsuario(
+  userId: number
+): Promise<Tarefa[]> {
+  const tarefas = await carregar();
+
+  return tarefas.filter((t) => t.userId === userId);
+}
+
+export async function adicionar(
+  userId: number,
+  texto: string
+): Promise<Tarefa> {
+  const tarefas = await carregar();
+
   const nova: Tarefa = {
-    id: (todas[todas.length - 1]?.id ?? 0) + 1,
+    id: (tarefas[tarefas.length - 1]?.id ?? 0) + 1,
     userId,
     texto: texto.trim(),
     concluida: false,
-    criadaEm: new Date().toLocaleDateString("pt-BR"),
+    criadaEm: new Date().toLocaleDateString("pt-BR")
   };
-  todas.push(nova);
-  await salvar(todas);
+
+  tarefas.push(nova);
+
+  await salvar(tarefas);
+
   return nova;
 }
 
-export async function concluir(id: number, userId: number): Promise<boolean> {
-  const todas = await carregar();
-  const t = todas.find(t => t.id === id && t.userId === userId);
-  if (!t) return false;
-  t.concluida = !t.concluida;
-  await salvar(todas);
-  return true;
+export async function toggleConcluida(
+  id: number
+): Promise<void> {
+  const tarefas = await carregar();
+
+  const tarefa = tarefas.find((t) => t.id === id);
+
+  if (!tarefa) {
+    return;
+  }
+
+  tarefa.concluida = !tarefa.concluida;
+
+  await salvar(tarefas);
 }
 
-export async function remover(id: number, userId: number): Promise<boolean> {
-  const todas = await carregar();
-  const i = todas.findIndex(t => t.id === id && t.userId === userId);
-  if (i === -1) return false;
-  todas.splice(i, 1);
-  await salvar(todas);
-  return true;
+export async function remover(
+  id: number
+): Promise<void> {
+  const tarefas = await carregar();
+
+  const filtradas = tarefas.filter(
+    (t) => t.id !== id
+  );
+
+  await salvar(filtradas);
 }
