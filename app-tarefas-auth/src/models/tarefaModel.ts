@@ -83,3 +83,7 @@ export async function remover(
 
   await salvar(filtradas);
 }
+
+export async function listarTodas(): Promise<Tarefa[]> {
+  return await carregar();
+}
