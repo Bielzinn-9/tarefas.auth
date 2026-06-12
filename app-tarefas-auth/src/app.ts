@@ -3,6 +3,7 @@ import session from "express-session";
 
 import { authRoutes } from "./routes/authRoutes";
 import { tarefaRoutes } from "./routes/tarefaRoutes";
+import { adminRoutes } from "./routes/adminRoutes";
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use(express.static("public"));
 
 app.use(authRoutes);
 app.use(tarefaRoutes);
+app.use(adminRoutes);
 
 app.listen(3000, () =>
     console.log("✅ App Tarefas rodando em http://localhost:3000")
